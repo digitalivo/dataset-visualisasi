@@ -457,6 +457,12 @@ input[type=file] { display: none; }
 .analytics-table thead th:nth-child(2) { text-align: left; min-width: 180px; }
 .analytics-table thead th.th-fin { color: var(--green); }
 .analytics-table thead th.th-snap { color: var(--blue); }
+.analytics-table thead tr:nth-child(2) th {
+  border-bottom: 1px solid var(--border);
+  padding-top: 0;
+  background: var(--bg3);
+}
+.analytics-table thead th.th-au { color: var(--purple); opacity: .85; }
 .analytics-table tbody tr {
   border-bottom: 1px solid var(--border);
   transition: background var(--dur) var(--ease);
@@ -842,7 +848,7 @@ const LS_KEY = 'ivory_rtw_v2';
 const SNAP_ORDER = ['malam','sore','siang','final'];
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-let S = { files:{}, dates:[], top15:[], kp:{}, dt:{}, id:{}, dtm:{}, cc:{} };
+let S = { files:{}, dates:[], top15:[], kp:{}, kpAU:{}, dt:{}, id:{}, dtm:{}, cc:{} };
 let chartInst = null;
 
 // ─── PERSISTENCE ─────────────────────────────────────────────────────────────
@@ -994,13 +1000,15 @@ function rebuild() {
       idm[f.date][f.type] = f;
     }
   });
-  const dt = {}, kpraw = {};
+  const dt = {}, kpraw = {}, kpAU = {};
   Object.entries(dm).forEach(([date, types]) => {
     const best = SNAP_ORDER.map(t => types[t]).find(Boolean) || Object.values(types)[0];
     dt[date] = { ke: best.totalKE, au: best.totalAU, type: best.type };
     Object.entries(best.campData).forEach(([c, data]) => {
       if (!kpraw[c]) kpraw[c] = {};
+      if (!kpAU[c])  kpAU[c]  = {};
       kpraw[c][date] = data.ke;
+      kpAU[c][date]  = data.au;
     });
   });
   const ct = {};
@@ -1012,7 +1020,7 @@ function rebuild() {
     const mi = MO.indexOf(ma), mj = MO.indexOf(mb);
     return mi !== mj ? mi-mj : parseInt(da)-parseInt(db);
   });
-  S.dates = sd; S.top15 = top15; S.kp = kpraw; S.dt = dt; S.id = idm; S.dtm = dm;
+  S.dates = sd; S.top15 = top15; S.kp = kpraw; S.kpAU = kpAU; S.dt = dt; S.id = idm; S.dtm = dm;
   S.cc = {};
   top15.forEach((c,i) => { S.cc[c] = PALETTE[i % PALETTE.length]; });
 }
@@ -1056,7 +1064,7 @@ function renderFileTags() {
 function removeFile(fn) {
   delete S.files[fn];
   if (Object.keys(S.files).length > 0) rebuild();
-  else S = { files:{}, dates:[], top15:[], kp:{}, dt:{}, id:{}, dtm:{}, cc:{} };
+  else S = { files:{}, dates:[], top15:[], kp:{}, kpAU:{}, dt:{}, id:{}, dtm:{}, cc:{} };
   renderAll();
   renderFileTags();
   saveToStorage();
@@ -1131,54 +1139,74 @@ function renderTable() {
     el.innerHTML = '<div class="empty"><div class="empty-txt">Upload file CSV untuk melihat data</div></div>';
     return;
   }
-  let h = `<div class="tbl-wrap"><table class="analytics-table"><thead><tr>
-    <th>#</th>
-    <th style="text-align:left;min-width:190px;">Campaign</th>
-    ${S.dates.map(d => {
-      const t = S.dt[d]?.type;
-      const c = t==='final' ? 'th-fin' : ['siang','sore','malam'].includes(t) ? 'th-snap' : '';
-      const mk = t==='final' ? ' ✓' : ['siang','sore','malam'].includes(t) ? ' ⏱' : '';
-      return `<th class="${c}">${d}${mk}</th>`;
-    }).join('')}
-    <th>Total</th><th>Peak</th><th style="text-align:left;min-width:110px;">Tren</th>
-  </tr></thead><tbody>`;
+  let h = `<div class="tbl-wrap"><table class="analytics-table"><thead>
+    <tr>
+      <th rowspan="2">#</th>
+      <th rowspan="2" style="text-align:left;min-width:190px;">Campaign</th>
+      ${S.dates.map(d => {
+        const t = S.dt[d]?.type;
+        const c = t==='final' ? 'th-fin' : ['siang','sore','malam'].includes(t) ? 'th-snap' : '';
+        const mk = t==='final' ? ' ✓' : ['siang','sore','malam'].includes(t) ? ' ⏱' : '';
+        return `<th colspan="2" class="${c}" style="text-align:center;">${d}${mk}</th>`;
+      }).join('')}
+      <th rowspan="2">KE</th>
+      <th rowspan="2" class="th-au">AU Total</th>
+      <th rowspan="2">Peak</th>
+      <th rowspan="2" style="text-align:left;min-width:110px;">Tren</th>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border);">
+      ${S.dates.map(()=>`
+        <th style="font-size:9px;color:var(--t3);padding-bottom:8px;font-weight:500;">KE</th>
+        <th style="font-size:9px;color:var(--purple);opacity:.8;padding-bottom:8px;font-weight:500;">AU</th>
+      `).join('')}
+    </tr>
+  </thead><tbody>`;
 
   S.top15.forEach((camp, idx) => {
-    const arr = S.dates.map(d => S.kp[camp]?.[d]||0);
-    const baseMx = Math.max(...arr.slice(0,-1), 1);
-    const tot = arr.reduce((a,b)=>a+b,0);
-    const mxv = Math.max(...arr), mxI = arr.indexOf(mxv);
-    const tr = trendInfo(arr);
+    const keArr = S.dates.map(d => S.kp[camp]?.[d]||0);
+    const auArr = S.dates.map(d => S.kpAU?.[camp]?.[d]||0);
+    const baseMx = Math.max(...keArr.slice(0,-1), 1);
+    const totKE = keArr.reduce((a,b)=>a+b,0);
+    const totAU = auArr.reduce((a,b)=>a+b,0);
+    const mxv = Math.max(...keArr), mxI = keArr.indexOf(mxv);
+    const tr = trendInfo(keArr);
     const rcls = idx===0?'r1':idx===1?'r2':idx===2?'r3':'';
     const badge = idx<3 ? `<span class="top-pill p${idx+1}">Top ${idx+1}</span>` : '';
     const col = S.cc[camp]||'#007aff';
-    const cells = arr.map((v,di) => {
+
+    const cells = keArr.map((v,di) => {
       const t = S.dt[S.dates[di]]?.type;
-      const isLast = di===arr.length-1;
-      let c = isLast ? (t==='final'?'ke-fin':'ke-snap') : keClass(v, baseMx);
-      if (v===0) c='ke-nil';
-      return `<td><div class="ke-val ${c}">${v===0?'—':v}</div></td>`;
+      const isLast = di===keArr.length-1;
+      let keCls = isLast ? (t==='final'?'ke-fin':'ke-snap') : keClass(v, baseMx);
+      if (v===0) keCls='ke-nil';
+      const auV = auArr[di];
+      const auStr = auV > 0 ? (auV >= 1000 ? (auV/1000).toFixed(1)+'k' : auV) : '—';
+      return `<td><div class="ke-val ${keCls}">${v===0?'—':v}</div></td>
+              <td style="font-size:10px;color:var(--purple);opacity:.75;text-align:center;">${auStr}</td>`;
     }).join('');
+
+    const auTotStr = totAU > 0 ? (totAU >= 1000 ? (totAU/1000).toFixed(0)+'k' : totAU) : '—';
     h += `<tr>
       <td><div class="cell-name"><div class="rank-badge ${rcls}">${idx+1}</div></div></td>
       <td><div class="cell-name">${badge}<span class="camp-color" style="background:${col};"></span><span class="camp-name-str" title="${camp}">${camp}</span></div></td>
       ${cells}
-      <td><div class="total-num">${tot}</div></td>
+      <td><div class="total-num">${totKE}</div></td>
+      <td><div style="font-size:13px;font-weight:700;letter-spacing:-0.02em;color:var(--purple);">${auTotStr}</div></td>
       <td><div class="peak-cell"><div class="peak-d">${S.dates[mxI]||'—'}</div><div class="peak-k">${mxv} KE</div></div></td>
-      <td><div class="trend-cell">${sparkSVG(arr)}<span class="trend-tag ${tr.c}">${tr.t}</span></div></td>
+      <td><div class="trend-cell">${sparkSVG(keArr)}<span class="trend-tag ${tr.c}">${tr.t}</span></div></td>
     </tr>`;
   });
 
   h += `<tr class="tfoot-row">
     <td colspan="2" class="tfoot-lbl">Total KE / hari</td>
-    ${S.dates.map(d=>`<td class="tfoot-ke">${S.dt[d]?.ke||0}</td>`).join('')}
+    ${S.dates.map(d=>`<td class="tfoot-ke">${S.dt[d]?.ke||0}</td><td></td>`).join('')}
     <td class="tfoot-tot">${S.dates.reduce((s,d)=>s+(S.dt[d]?.ke||0),0)}</td>
-    <td colspan="2"></td>
+    <td></td><td colspan="2"></td>
   </tr><tr class="tfoot-row">
     <td colspan="2" class="tfoot-lbl">Active Users / hari</td>
-    ${S.dates.map(d=>`<td class="tfoot-au">${((S.dt[d]?.au||0)/1000).toFixed(0)}k</td>`).join('')}
+    ${S.dates.map(d=>`<td></td><td class="tfoot-au" style="color:var(--purple);opacity:.7;">${((S.dt[d]?.au||0)/1000).toFixed(0)}k</td>`).join('')}
     <td class="tfoot-au">${(S.dates.reduce((s,d)=>s+(S.dt[d]?.au||0),0)/1000).toFixed(0)}k</td>
-    <td colspan="2"></td>
+    <td></td><td colspan="2"></td>
   </tr>`;
   h += '</tbody></table></div>';
   el.innerHTML = h;
@@ -1276,17 +1304,19 @@ function showCamp(date, btn) {
   const maxV = sorted[0]?.[1]?.ke || 1;
   document.getElementById('campContent').innerHTML = `<div class="card-header" style="padding-bottom:10px;">
     <div class="card-title">${date}</div>
-    <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:var(--t3);">${best.totalKE} KE total</span>${tagHtml}</div>
+    <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:var(--t3);">${best.totalKE} KE</span><span style="font-size:13px;color:var(--purple);font-weight:500;">👤 ${best.totalAU.toLocaleString()} AU</span>${tagHtml}</div>
   </div>
   <div class="card-body">
     ${sorted.map(([c,d],i) => {
       const bw = Math.round((d.ke/maxV)*100);
       const col = S.cc[c]||'#007aff';
+      const auStr = d.au >= 1000 ? (d.au/1000).toFixed(1)+'k' : d.au.toString();
       return `<div class="day-row">
         <div class="dr-rank">${i+1}</div>
         <div class="dr-name" title="${c}">${c}</div>
         <div class="dr-bar-track"><div class="dr-bar" style="width:${bw}%;background:${col};"></div></div>
         <div class="dr-val">${d.ke}</div>
+        <div style="font-size:10px;color:var(--purple);opacity:.8;width:40px;text-align:right;flex-shrink:0;">👤${auStr}</div>
       </div>`;
     }).join('')}
   </div>`;
@@ -1310,6 +1340,11 @@ function showPage(date, btn) {
 }
 
 // ─── INTRADAY ─────────────────────────────────────────────────────────────────
+function fmtAU(v) {
+  if (!v || v === 0) return '—';
+  return v >= 1000 ? (v/1000).toFixed(1)+'k' : String(v);
+}
+
 function renderIntraday() {
   const el = document.getElementById('intradayContent');
   const days = Object.keys(S.id);
@@ -1325,61 +1360,175 @@ function renderIntraday() {
     if (!acts.length) return;
     const sd = acts.map(t => ({ type:t, ke:snaps[t].totalKE, au:snaps[t].totalAU, campData:snaps[t].campData }));
     const maxKE = Math.max(...sd.map(s=>s.ke),1) * 1.2;
+    const maxAU = Math.max(...sd.map(s=>s.au),1);
     const first = sd[0], last = sd[sd.length-1];
     const dke = last.ke-first.ke, dau = last.au-first.au;
     const pct = Math.round(dke/Math.max(first.ke,1)*100);
-    const allC = new Set(); sd.forEach(s=>Object.keys(s.campData).forEach(c=>allC.add(c)));
-    const rows = Array.from(allC).map(c=>({c, ke:sd.map(s=>s.campData[c]?.ke||0)})).sort((a,b)=>b.ke[b.ke.length-1]-a.ke[a.ke.length-1]).slice(0,15);
 
-    html += `<div style="margin-bottom:32px;">
-      <div class="section-header"><div class="section-title" style="font-size:17px;">${date}</div><div class="section-sub">${acts.join(' → ')}</div></div>
+    // Collect all campaigns across all snapshots
+    const allC = new Set();
+    sd.forEach(s=>Object.keys(s.campData).forEach(c=>allC.add(c)));
+
+    // Build rows with KE + AU per snapshot
+    const rows = Array.from(allC).map(c => ({
+      c,
+      keArr: sd.map(s => s.campData[c]?.ke || 0),
+      auArr: sd.map(s => s.campData[c]?.au || 0),
+    })).sort((a,b) => b.keArr[b.keArr.length-1] - a.keArr[a.keArr.length-1]).slice(0,15);
+
+    // Also check if final data exists for this date
+    const finalFile = S.dtm[date]?.final;
+    const finalRows = finalFile
+      ? Object.entries(finalFile.campData)
+          .filter(([c])=>!EXCL.includes(c))
+          .sort((a,b)=>b[1].ke-a[1].ke)
+          .slice(0,15)
+      : [];
+
+    html += `<div style="margin-bottom:36px;">
+      <div class="section-header">
+        <div class="section-title" style="font-size:17px;">${date}</div>
+        <div class="section-sub">${acts.join(' → ')}${finalFile?' · ✓ final tersedia':''}</div>
+      </div>
+
+      <!-- KPI CARDS -->
       <div class="id-kpi-row">
         ${sd.map(s=>`<div class="kpi-card">
           <div class="kpi-label">${s.type}</div>
           <div class="kpi-val" style="color:${SCOLS[s.type]};">${s.ke}</div>
-          <div class="kpi-sub">${(s.au/1000).toFixed(1)}k users</div>
+          <div class="kpi-sub">${s.ke} KE · <span style="color:var(--purple);">👤 ${fmtAU(s.au)}</span></div>
         </div>`).join('')}
         <div class="kpi-card">
           <div class="kpi-label">Kenaikan Total</div>
           <div class="kpi-val" style="color:var(--green);">+${dke}</div>
-          <div class="kpi-sub" style="color:var(--green);">+${pct}% · AU +${(dau/1000).toFixed(1)}k</div>
+          <div class="kpi-sub" style="color:var(--green);">+${pct}% KE</div>
+          <div class="kpi-sub" style="color:var(--purple);margin-top:2px;">👤 AU +${fmtAU(dau)}</div>
         </div>
       </div>
+
+      <!-- PROGRESS + DELTA TABLE -->
       <div class="two-col">
+        <!-- PROGRESS BARS: KE + AU per snapshot -->
         <div class="card">
-          <div class="card-header"><div class="card-title">Progres Key Events</div></div>
+          <div class="card-header"><div class="card-title">Progres KE &amp; Active Users</div></div>
           <div class="card-body">
-            ${sd.map(s=>{const p=Math.round((s.ke/maxKE)*100);return`<div class="tl-row">
-              <div class="tl-label">${s.type}</div>
-              <div class="tl-track"><div class="tl-fill" style="width:${p}%;background:${SCOLS[s.type]};"></div></div>
-              <div class="tl-count">${s.ke}</div>
-              <span class="tl-badge actual">aktual</span>
-            </div>`;}).join('')}
+            ${sd.map(s=>{
+              const pKE = Math.round((s.ke/maxKE)*100);
+              const pAU = Math.round((s.au/maxAU)*100);
+              return `<div style="margin-bottom:14px;">
+                <div style="font-size:10px;font-weight:600;color:${SCOLS[s.type]};margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">${s.type}</div>
+                <div class="tl-row" style="margin-bottom:4px;">
+                  <div class="tl-label" style="font-size:9px;color:var(--t3);width:28px;">KE</div>
+                  <div class="tl-track"><div class="tl-fill" style="width:${pKE}%;background:${SCOLS[s.type]};"></div></div>
+                  <div class="tl-count" style="font-size:12px;">${s.ke}</div>
+                  <span class="tl-badge actual">aktual</span>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-label" style="font-size:9px;color:var(--purple);width:28px;">AU</div>
+                  <div class="tl-track"><div class="tl-fill" style="width:${pAU}%;background:var(--purple);opacity:.6;"></div></div>
+                  <div class="tl-count" style="font-size:11px;color:var(--purple);">${fmtAU(s.au)}</div>
+                  <span class="tl-badge actual" style="background:var(--purple-bg);color:var(--purple);">AU</span>
+                </div>
+              </div>`;
+            }).join('')}
           </div>
         </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Delta Campaign</div></div>
-          <div class="card-body">
-            <table class="delta-tbl"><thead><tr>
-              <th style="text-align:left;">Campaign</th>
-              ${acts.map(t=>`<th>${t}</th>`).join('')}
-              <th>Δ</th><th>Status</th>
-            </tr></thead><tbody>
-            ${rows.map(({c,ke})=>{
-              const delta=ke[ke.length-1]-ke[0];
-              const isNew=ke[0]===0&&ke[ke.length-1]>0;
-              const dc=delta>0?'d-pos':delta<0?'d-neg':'d-zero';
-              const ds=delta>0?`+${delta}`:delta===0?'—':String(delta);
-              const status=isNew?'<span class="s-new">Baru</span>':delta>0?'<span class="s-up">Naik</span>':'<span class="s-flat">Stabil</span>';
-              const col=S.cc[c]||'#007aff';
-              return`<tr><td><div style="display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0;display:inline-block;"></span><span style="font-size:11px;color:var(--t1);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c}</span></div></td>
-              ${ke.map(v=>`<td style="color:var(--t2);">${v||'—'}</td>`).join('')}
-              <td class="${dc}">${ds}</td><td>${status}</td></tr>`;
-            }).join('')}
-            </tbody></table>
+
+        <!-- DELTA TABLE: KE per snapshot + AU per snapshot + Δ -->
+        <div class="card" style="overflow:hidden;">
+          <div class="card-header"><div class="card-title">Delta Campaign per Snapshot</div></div>
+          <div class="card-body" style="overflow-x:auto;padding:12px 16px 16px;">
+            <table class="delta-tbl" style="min-width:520px;">
+              <thead><tr>
+                <th style="text-align:left;min-width:130px;">Campaign</th>
+                ${acts.map(t=>`
+                  <th style="color:${SCOLS[t]};">KE<br><span style="font-size:8px;opacity:.7;">${t}</span></th>
+                  <th style="color:var(--purple);opacity:.8;">AU<br><span style="font-size:8px;opacity:.7;">${t}</span></th>
+                `).join('')}
+                <th style="color:var(--green);">Δ KE</th>
+                <th style="color:var(--purple);">Δ AU</th>
+                <th>Status</th>
+              </tr></thead>
+              <tbody>
+              ${rows.map(({c, keArr, auArr})=>{
+                const dke2 = keArr[keArr.length-1] - keArr[0];
+                const dau2 = auArr[auArr.length-1] - auArr[0];
+                const isNew = keArr[0]===0 && keArr[keArr.length-1]>0;
+                const dkeCls = dke2>0?'d-pos':dke2<0?'d-neg':'d-zero';
+                const dauCls = dau2>0?'d-pos':dau2<0?'d-neg':'d-zero';
+                const dkeStr = dke2>0?`+${dke2}`:dke2===0?'—':String(dke2);
+                const dauStr = dau2>0?`+${fmtAU(dau2)}`:dau2===0?'—':`-${fmtAU(Math.abs(dau2))}`;
+                const status = isNew
+                  ? '<span class="s-new">Baru</span>'
+                  : dke2>0 ? '<span class="s-up">↑ Naik</span>'
+                  : dke2<0 ? '<span class="s-flat" style="color:var(--red);">↓ Turun</span>'
+                  : '<span class="s-flat">Stabil</span>';
+                const col = S.cc[c]||'#007aff';
+                const snapCells = keArr.map((ke,i)=>`
+                  <td style="color:var(--t1);font-weight:${ke>0?'600':'400'};">${ke||'—'}</td>
+                  <td style="color:var(--purple);opacity:.75;font-size:10px;">${fmtAU(auArr[i])}</td>
+                `).join('');
+                return `<tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span style="width:6px;height:6px;border-radius:50%;background:${col};flex-shrink:0;display:inline-block;"></span>
+                      <span style="font-size:10.5px;color:var(--t1);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c}">${c}</span>
+                    </div>
+                  </td>
+                  ${snapCells}
+                  <td class="${dkeCls}" style="font-size:12px;">${dkeStr}</td>
+                  <td class="${dauCls}" style="font-size:10px;">${dauStr}</td>
+                  <td>${status}</td>
+                </tr>`;
+              }).join('')}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
+
+      <!-- WHOLE DAY TABLE (if final exists) -->
+      ${finalFile ? `
+      <div class="card" style="margin-top:14px;">
+        <div class="card-header">
+          <div class="card-title">Data Final 24 Jam — ${date}</div>
+          <div class="card-meta" style="color:var(--green);">✓ ${finalFile.totalKE} KE · 👤 ${finalFile.totalAU.toLocaleString()} AU</div>
+        </div>
+        <div class="card-body" style="overflow-x:auto;">
+          <table class="delta-tbl" style="min-width:400px;">
+            <thead><tr>
+              <th style="text-align:left;">Campaign</th>
+              <th style="color:var(--green);">Key Events</th>
+              <th style="color:var(--purple);">Active Users</th>
+              <th>KE Bar</th>
+            </tr></thead>
+            <tbody>
+            ${finalRows.map(([c,d],i)=>{
+              const maxKEF = finalRows[0][1].ke || 1;
+              const maxAUF = Math.max(...finalRows.map(r=>r[1].au), 1);
+              const barKE = Math.round((d.ke/maxKEF)*100);
+              const col = S.cc[c]||'#007aff';
+              return `<tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:${col};flex-shrink:0;display:inline-block;"></span>
+                    <span style="font-size:10.5px;color:var(--t1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c}">${c}</span>
+                  </div>
+                </td>
+                <td style="color:var(--green);font-weight:600;">${d.ke}</td>
+                <td style="color:var(--purple);font-size:11px;">${fmtAU(d.au)}</td>
+                <td style="width:120px;">
+                  <div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;">
+                    <div style="height:4px;border-radius:2px;background:${col};width:${barKE}%;"></div>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>` : ''}
+
     </div>`;
   });
   el.innerHTML = html;
