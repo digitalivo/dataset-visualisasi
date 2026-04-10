@@ -457,6 +457,7 @@ input[type=file] { display: none; }
 .analytics-table thead th:nth-child(2) { text-align: left; min-width: 180px; }
 .analytics-table thead th.th-fin { color: var(--green); }
 .analytics-table thead th.th-snap { color: var(--blue); }
+.analytics-table thead th.th-au { color: var(--purple); opacity: .85; }
 .analytics-table tbody tr {
   border-bottom: 1px solid var(--border);
   transition: background var(--dur) var(--ease);
@@ -1140,7 +1141,7 @@ function renderTable() {
       const mk = t==='final' ? ' ✓' : ['siang','sore','malam'].includes(t) ? ' ⏱' : '';
       return `<th class="${c}">${d}${mk}</th>`;
     }).join('')}
-    <th>Total</th><th>Peak</th><th style="text-align:left;min-width:110px;">Tren</th>
+    <th>KE</th><th class="th-au">AU</th><th>Peak</th><th style="text-align:left;min-width:110px;">Tren</th>
   </tr></thead><tbody>`;
 
   S.top15.forEach((camp, idx) => {
@@ -1150,6 +1151,14 @@ function renderTable() {
     const mxv = Math.max(...arr), mxI = arr.indexOf(mxv);
     const tr = trendInfo(arr);
     const rcls = idx===0?'r1':idx===1?'r2':idx===2?'r3':'';
+    // AU total for this campaign across all dates
+    const auTotNum = S.dates.reduce((s,d) => {
+      const files = Object.values(S.files).filter(f=>f.date===d);
+      const SORD=['malam','sore','siang','final'];
+      const best = SORD.map(t=>files.find(f=>f.type===t)).find(Boolean)||files[0];
+      return s + (best?.campData?.[camp]?.au||0);
+    }, 0);
+    const auTot = auTotNum > 0 ? (auTotNum >= 1000 ? (auTotNum/1000).toFixed(0)+'k' : auTotNum) : '—';
     const badge = idx<3 ? `<span class="top-pill p${idx+1}">Top ${idx+1}</span>` : '';
     const col = S.cc[camp]||'#007aff';
     const cells = arr.map((v,di) => {
@@ -1164,6 +1173,7 @@ function renderTable() {
       <td><div class="cell-name">${badge}<span class="camp-color" style="background:${col};"></span><span class="camp-name-str" title="${camp}">${camp}</span></div></td>
       ${cells}
       <td><div class="total-num">${tot}</div></td>
+      <td><div style="font-size:14px;font-weight:700;letter-spacing:-0.02em;color:var(--purple);opacity:.85;">${auTot}</div></td>
       <td><div class="peak-cell"><div class="peak-d">${S.dates[mxI]||'—'}</div><div class="peak-k">${mxv} KE</div></div></td>
       <td><div class="trend-cell">${sparkSVG(arr)}<span class="trend-tag ${tr.c}">${tr.t}</span></div></td>
     </tr>`;
@@ -1173,12 +1183,12 @@ function renderTable() {
     <td colspan="2" class="tfoot-lbl">Total KE / hari</td>
     ${S.dates.map(d=>`<td class="tfoot-ke">${S.dt[d]?.ke||0}</td>`).join('')}
     <td class="tfoot-tot">${S.dates.reduce((s,d)=>s+(S.dt[d]?.ke||0),0)}</td>
-    <td colspan="2"></td>
+    <td></td><td colspan="2"></td>
   </tr><tr class="tfoot-row">
     <td colspan="2" class="tfoot-lbl">Active Users / hari</td>
     ${S.dates.map(d=>`<td class="tfoot-au">${((S.dt[d]?.au||0)/1000).toFixed(0)}k</td>`).join('')}
-    <td class="tfoot-au">${(S.dates.reduce((s,d)=>s+(S.dt[d]?.au||0),0)/1000).toFixed(0)}k</td>
-    <td colspan="2"></td>
+    <td class="tfoot-au">${(S.dates.reduce((s,d)=>s+(S.dt[d]?.ke||0),0)>0?(S.dates.reduce((s,d)=>s+(S.dt[d]?.au||0),0)/1000).toFixed(0)+'k':'—')}</td>
+    <td></td><td colspan="2"></td>
   </tr>`;
   h += '</tbody></table></div>';
   el.innerHTML = h;
@@ -1276,17 +1286,19 @@ function showCamp(date, btn) {
   const maxV = sorted[0]?.[1]?.ke || 1;
   document.getElementById('campContent').innerHTML = `<div class="card-header" style="padding-bottom:10px;">
     <div class="card-title">${date}</div>
-    <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:var(--t3);">${best.totalKE} KE total</span>${tagHtml}</div>
+    <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:var(--t3);">${best.totalKE} KE</span><span style="font-size:13px;color:var(--purple);font-weight:500;">👤 ${best.totalAU.toLocaleString()} AU</span>${tagHtml}</div>
   </div>
   <div class="card-body">
     ${sorted.map(([c,d],i) => {
       const bw = Math.round((d.ke/maxV)*100);
       const col = S.cc[c]||'#007aff';
+      const auStr = d.au >= 1000 ? (d.au/1000).toFixed(1)+'k' : d.au.toString();
       return `<div class="day-row">
         <div class="dr-rank">${i+1}</div>
         <div class="dr-name" title="${c}">${c}</div>
         <div class="dr-bar-track"><div class="dr-bar" style="width:${bw}%;background:${col};"></div></div>
         <div class="dr-val">${d.ke}</div>
+        <div style="font-size:10px;color:var(--purple);opacity:.8;width:40px;text-align:right;flex-shrink:0;">👤${auStr}</div>
       </div>`;
     }).join('')}
   </div>`;
@@ -1362,8 +1374,8 @@ function renderIntraday() {
           <div class="card-body">
             <table class="delta-tbl"><thead><tr>
               <th style="text-align:left;">Campaign</th>
-              ${acts.map(t=>`<th>${t}</th>`).join('')}
-              <th>Δ</th><th>Status</th>
+              ${acts.map(t=>`<th>${t} KE</th>`).join('')}
+              <th>Δ KE</th><th style="color:var(--purple);">AU</th><th>Status</th>
             </tr></thead><tbody>
             ${rows.map(({c,ke})=>{
               const delta=ke[ke.length-1]-ke[0];
@@ -1374,7 +1386,9 @@ function renderIntraday() {
               const col=S.cc[c]||'#007aff';
               return`<tr><td><div style="display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0;display:inline-block;"></span><span style="font-size:11px;color:var(--t1);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c}</span></div></td>
               ${ke.map(v=>`<td style="color:var(--t2);">${v||'—'}</td>`).join('')}
-              <td class="${dc}">${ds}</td><td>${status}</td></tr>`;
+              <td class="${dc}">${ds}</td>
+              <td style="font-size:10px;color:var(--purple);opacity:.85;">${(()=>{const lastSnap=actSnaps[actSnaps.length-1];const auVal=snaps[lastSnap]?.campData?.[c]?.au||0;return auVal>0?(auVal>=1000?(auVal/1000).toFixed(1)+'k':auVal):'—';})()}</td>
+              <td>${status}</td></tr>`;
             }).join('')}
             </tbody></table>
           </div>
