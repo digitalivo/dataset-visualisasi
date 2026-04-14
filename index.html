@@ -2516,7 +2516,7 @@ Balas HANYA dengan JSON valid ini (tidak ada teks lain, tidak ada backtick markd
 Pastikan: setiap baris data tepat 24 nilai. Jumlah baris di "dates" = jumlah baris di "data".`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('/api/parse-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
