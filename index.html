@@ -309,10 +309,11 @@ input[type=file] { display: none; }
   cursor: default;
 }
 @keyframes popin { from { opacity:0; transform:scale(.9); } to { opacity:1; transform:scale(1); } }
-.ftag.final  { background:var(--green-bg);  color:var(--green);  border-color:rgba(52,199,89,.2); }
-.ftag.siang  { background:var(--blue-bg);   color:var(--blue);   border-color:rgba(0,122,255,.2); }
-.ftag.sore   { background:var(--purple-bg); color:var(--purple); border-color:rgba(175,82,222,.2); }
-.ftag.malam  { background:var(--amber-bg);  color:var(--amber);  border-color:rgba(255,149,0,.2); }
+.ftag.final   { background:var(--green-bg);  color:var(--green);  border-color:rgba(52,199,89,.2); }
+.ftag.siang   { background:var(--blue-bg);   color:var(--blue);   border-color:rgba(0,122,255,.2); }
+.ftag.sore    { background:var(--purple-bg); color:var(--purple); border-color:rgba(175,82,222,.2); }
+.ftag.malam   { background:var(--amber-bg);  color:var(--amber);  border-color:rgba(255,149,0,.2); }
+.ftag.heatmap { background:rgba(100,210,255,0.12); color:var(--teal); border-color:rgba(100,210,255,.25); }
 .ftag-x { cursor:pointer; opacity:.5; margin-left:2px; font-size:10px; }
 .ftag-x:hover { opacity:1; }
 
@@ -707,6 +708,50 @@ svg.sp { display: block; flex-shrink: 0; }
   nav { padding: 0 16px; }
 }
 
+/* ─── HEATMAP ─── */
+.hm-cell-tooltip {
+  position: fixed;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--t1);
+  pointer-events: none;
+  z-index: 300;
+  box-shadow: var(--shadow-lg);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .12s;
+}
+.hm-camp-btn {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--t3);
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.hm-camp-btn:hover { color: var(--t1); border-color: var(--border2); }
+.hm-camp-btn.active { background: var(--t1); color: var(--bg2); border-color: var(--t1); }
+.hm-stat-pill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  gap: 2px;
+  flex: 1;
+  min-width: 80px;
+}
 .mobile-nav {
   display: none;
   gap: 6px;
@@ -715,6 +760,145 @@ svg.sp { display: block; flex-shrink: 0; }
   padding-bottom: 4px;
 }
 .mobile-nav::-webkit-scrollbar { display: none; }
+
+/* ─── IMAGE UPLOAD PANEL ─── */
+.img-upload-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.img-upload-header {
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--dur) var(--ease);
+}
+.img-upload-header:hover { background: var(--bg3); }
+.img-upload-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--t1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.img-upload-badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--blue-bg);
+  color: var(--blue);
+  border: 1px solid rgba(10,132,255,0.2);
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+.img-upload-toggle {
+  font-size: 12px;
+  color: var(--t3);
+  transition: transform var(--dur) var(--ease);
+}
+.img-upload-toggle.open { transform: rotate(180deg); }
+.img-upload-body {
+  padding: 16px 22px 20px;
+  display: none;
+  animation: fade-in .2s var(--ease);
+}
+.img-upload-body.open { display: block; }
+.img-drop-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  background: var(--bg3);
+  position: relative;
+  overflow: hidden;
+}
+.img-drop-zone:hover { border-color: var(--blue); background: var(--blue-bg); }
+.img-drop-zone.drag { border-color: var(--blue); background: var(--blue-bg); }
+.img-drop-zone-icon { font-size: 24px; margin-bottom: 8px; }
+.img-drop-title { font-size: 14px; font-weight: 600; color: var(--t1); margin-bottom: 4px; }
+.img-drop-sub { font-size: 12px; color: var(--t3); }
+.img-preview-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 14px;
+  display: none;
+}
+.img-preview-row.show { display: flex; }
+.img-preview-thumb {
+  width: 120px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.img-preview-info { flex: 1; }
+.img-preview-name { font-size: 12px; font-weight: 600; color: var(--t1); margin-bottom: 4px; word-break: break-all; }
+.img-preview-dim { font-size: 11px; color: var(--t3); margin-bottom: 10px; }
+.img-action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.img-btn {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--t1);
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.img-btn:hover { background: var(--bg4); }
+.img-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.img-btn.primary {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+.img-btn.primary:hover { background: #0066dd; }
+.img-status {
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  color: var(--t2);
+  margin-top: 12px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.img-status.show { display: flex; }
+.img-status.loading { background: var(--blue-bg); color: var(--blue); }
+.img-status.success { background: var(--green-bg); color: var(--green); }
+.img-status.error { background: var(--red-bg); color: var(--red); }
+.img-spinner { width: 12px; height: 12px; border: 2px solid rgba(10,132,255,0.3); border-top-color: var(--blue); border-radius: 50%; animation: spin-img .7s linear infinite; flex-shrink: 0; }
+@keyframes spin-img { to { transform: rotate(360deg); } }
+.img-parsed-preview {
+  margin-top: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 11px;
+  color: var(--t2);
+  font-family: 'Inter', monospace;
+  max-height: 120px;
+  overflow-y: auto;
+  display: none;
+  line-height: 1.7;
+}
+.img-parsed-preview.show { display: block; }
 </style>
 </head>
 <body>
@@ -729,6 +913,7 @@ svg.sp { display: block; flex-shrink: 0; }
     <div class="nav-center">
       <button class="nav-tab active" onclick="switchView('overview', this)">Overview</button>
       <button class="nav-tab" onclick="switchView('breakdown', this)">Breakdown</button>
+      <button class="nav-tab" onclick="switchView('heatmap', this)">Heatmap</button>
       <button class="nav-tab" onclick="switchView('intraday', this)">Intraday</button>
     </div>
     <div class="nav-right">
@@ -749,6 +934,7 @@ svg.sp { display: block; flex-shrink: 0; }
   <div class="mobile-nav">
     <button class="tg-btn active" onclick="switchView('overview', this)">Overview</button>
     <button class="tg-btn" onclick="switchView('breakdown', this)">Breakdown</button>
+    <button class="tg-btn" onclick="switchView('heatmap', this)">Heatmap</button>
     <button class="tg-btn" onclick="switchView('intraday', this)">Intraday</button>
   </div>
 
@@ -818,6 +1004,92 @@ svg.sp { display: block; flex-shrink: 0; }
     <div class="card" id="pageContent"><div class="card-body"><div class="empty"><div class="empty-txt">Pilih tanggal</div></div></div></div>
   </div>
 
+  <!-- HEATMAP -->
+  <div class="view" id="view-heatmap">
+    <div class="section-header">
+      <div class="section-title">Heatmap Aktivitas</div>
+      <div class="section-sub" id="hmSubtitle">Intensitas Key Events per jam dalam sehari</div>
+    </div>
+
+    <!-- IMAGE UPLOAD PANEL -->
+    <div class="img-upload-panel">
+      <div class="img-upload-header" onclick="toggleImgPanel()">
+        <div class="img-upload-title">
+          📷 Upload Screenshot Tabel
+          <span class="img-upload-badge">AI Parse</span>
+        </div>
+        <div class="img-upload-toggle" id="imgPanelToggle">▼</div>
+      </div>
+      <div class="img-upload-body" id="imgUploadBody">
+        <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.7;">
+          Upload screenshot/foto tabel heatmap (PNG/JPG). AI akan otomatis membaca angka-angka dan memasukkan data ke heatmap. Tidak perlu CSV.
+        </p>
+        <div class="img-drop-zone" id="imgDropZone">
+          <input type="file" id="imgFileIn" accept="image/*" style="display:none">
+          <div class="img-drop-zone-icon">🖼</div>
+          <div class="img-drop-title">Klik atau drag &amp; drop gambar</div>
+          <div class="img-drop-sub">PNG · JPG · JPEG · WEBP</div>
+        </div>
+        <div class="img-preview-row" id="imgPreviewRow">
+          <img class="img-preview-thumb" id="imgPreviewThumb" src="" alt="preview">
+          <div class="img-preview-info">
+            <div class="img-preview-name" id="imgPreviewName">—</div>
+            <div class="img-preview-dim" id="imgPreviewDim">—</div>
+            <div class="img-action-row">
+              <button class="img-btn primary" id="imgParseBtn" onclick="parseImageWithAI()">✨ Parse &amp; Masukkan ke Heatmap</button>
+              <button class="img-btn" id="imgResetBtn" onclick="resetImgUpload()">Ganti Gambar</button>
+            </div>
+          </div>
+        </div>
+        <div class="img-status" id="imgStatus">
+          <div class="img-spinner" id="imgSpinner"></div>
+          <span id="imgStatusText">Memproses...</span>
+        </div>
+        <div class="img-parsed-preview" id="imgParsedPreview"></div>
+      </div>
+    </div>
+
+    <!-- Campaign selector -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header" style="padding-bottom:14px;">
+        <div class="card-title">Pilih Campaign</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="hmCampLabel" style="font-size:12px;color:var(--t3);"></span>
+        </div>
+      </div>
+      <div class="card-body" style="padding-top:8px;">
+        <div id="hmCampSelector" style="display:flex;flex-wrap:wrap;gap:6px;">
+          <div class="empty" style="padding:12px 0;"><div class="empty-txt">Upload CSV untuk melihat data</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Heatmap canvas card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title" id="hmTitle">Heatmap: Key Events per Jam</div>
+        <div id="hmMeta" style="font-size:12px;color:var(--t3);"></div>
+      </div>
+      <div class="card-body" style="padding:12px 18px 20px;">
+        <!-- Colorbar legend -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <span style="font-size:10px;color:var(--t3);font-weight:500;">0</span>
+          <div id="hmColorBar" style="flex:1;height:10px;border-radius:6px;"></div>
+          <span id="hmColorBarMax" style="font-size:10px;color:var(--t3);font-weight:500;">—</span>
+          <span style="font-size:10px;color:var(--t3);">Key Events</span>
+        </div>
+        <!-- Canvas -->
+        <div style="position:relative;overflow-x:auto;">
+          <canvas id="hmCanvas" style="display:block;max-width:100%;"></canvas>
+        </div>
+        <!-- Hour axis label -->
+        <div style="display:flex;padding-left:var(--hm-label-w,110px);margin-top:4px;" id="hmHourAxis"></div>
+        <!-- Summary stats row -->
+        <div id="hmStats" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- INTRADAY -->
   <div class="view" id="view-intraday">
     <div class="section-header">
@@ -843,29 +1115,28 @@ const LS_KEY = 'ivory_rtw_v2';
 const SNAP_ORDER = ['malam','sore','siang','final'];
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-let S = { files:{}, dates:[], top15:[], top10:[], kp:{}, dt:{}, id:{}, dtm:{}, cc:{} };
+let S = { files:{}, dates:[], top15:[], top10:[], kp:{}, dt:{}, id:{}, dtm:{}, cc:{}, hm:{} };
 let chartInst = null;
 
 // ─── PERSISTENCE ─────────────────────────────────────────────────────────────
 function saveToStorage() {
   try {
-    // Store serializable state
-    const toSave = {};
+    const toSave = { _files: {}, _hm: S.hm };
     Object.values(S.files).forEach(f => {
-      toSave[f.fn] = {
+      toSave._files[f.fn] = {
         fn: f.fn, date: f.date, type: f.type,
         campData: f.campData, pageData: f.pageData,
-        totalKE: f.totalKE, totalAU: f.totalAU
+        totalKE: f.totalKE, totalAU: f.totalAU,
+        _hmDates: f._hmDates || null
       };
     });
     const payload = JSON.stringify(toSave);
-    // Check size (localStorage max ~5MB)
     if (payload.length < 4500000) {
       localStorage.setItem(LS_KEY, payload);
     } else {
-      // If too large, store only last 5 files
-      const trimmed = Object.values(toSave).slice(-5);
-      const obj = {}; trimmed.forEach(f => obj[f.fn] = f);
+      const trimmed = Object.values(toSave._files).slice(-5);
+      const obj = { _files: {}, _hm: S.hm };
+      trimmed.forEach(f => obj._files[f.fn] = f);
       localStorage.setItem(LS_KEY, JSON.stringify(obj));
       toast('Data terlalu besar, hanya 5 file terakhir tersimpan', 'warn');
     }
@@ -878,11 +1149,20 @@ function loadFromStorage() {
     if (!raw) return;
     const saved = JSON.parse(raw);
     if (!saved || typeof saved !== 'object') return;
-    S.files = saved;
+    // Support both old format (plain object) and new format ({_files, _hm})
+    if (saved._files) {
+      S.files = saved._files;
+      S.hm = saved._hm || {};
+    } else {
+      S.files = saved; // legacy
+      S.hm = {};
+    }
     rebuild();
     renderAll();
     renderFileTags();
-    toast(`✓ ${Object.keys(saved).length} dataset dipulihkan dari sesi sebelumnya`);
+    const n = Object.keys(S.files).length;
+    const hmN = Object.keys(S.hm).length;
+    toast(`✓ ${n} dataset dipulihkan${hmN ? ` · ${hmN} hari heatmap` : ''}`);
   } catch(e) { console.warn('Storage load failed:', e); }
 }
 
@@ -900,12 +1180,13 @@ function toggleTheme() {
   localStorage.setItem('ivory_theme', next);
   document.getElementById('themeBtn').textContent = next === 'dark' ? '🌙' : '☀️';
   if (chartInst) setTimeout(renderTrend, 50);
+  if (document.getElementById('view-heatmap').classList.contains('active')) setTimeout(renderHeatmap, 50);
 }
 
 // ─── FILE DETECT ─────────────────────────────────────────────────────────────
 function detectType(fn) {
   const f = fn.toLowerCase();
-  const type = f.includes('final') ? 'final' : f.includes('malam') ? 'malam' : f.includes('sore') ? 'sore' : f.includes('siang') ? 'siang' : 'final';
+  const type = f.includes('heatmap') ? 'heatmap' : f.includes('final') ? 'final' : f.includes('malam') ? 'malam' : f.includes('sore') ? 'sore' : f.includes('siang') ? 'siang' : 'final';
   let day = null, mon = null;
   const m1 = f.match(/(\d{1,2})[\s\-_]*(jan|feb|mar|apr|mei|jun|jul|agu|sep|okt|nov|des|january|february|march|april|may|june|july|august|september|october|november|december)/i);
   const m2 = f.match(/(jan|feb|mar|apr|mei|jun|jul|agu|sep|okt|nov|des|january|february|march|april|may|june|july|august|september|october|november|december)[\s\-_]*(\d{1,2})/i);
@@ -958,6 +1239,115 @@ function shortPage(n) {
   return n.replace(' - Ivory Studio RTW','').replace('Bonded by Threads | ','').replace('Anyaman Hikayat | ','').trim();
 }
 
+// ─── HEATMAP CSV PARSE ───────────────────────────────────────────────────────
+// Parses GA4 CSV with "Date + hour (YYYYMMDDHH)" column.
+// Aggregates total Key events per hour per date (sums all page rows).
+// Returns { "D Mon": { "__ALL__": [24 values], "CampaignName": [24 values] } }
+function parseHeatmapCSV(text) {
+  const lines = text.split('\n');
+
+  // Find header row — must contain 'Key events' and a date/hour column
+  let hi = -1;
+  for (let i = 0; i < Math.min(30, lines.length); i++) {
+    const l = lines[i].toLowerCase();
+    if (l.includes('key events') && (l.includes('hour') || l.includes('date'))) { hi = i; break; }
+  }
+  if (hi < 0) return null;
+
+  const parsed = Papa.parse(lines.slice(hi).join('\n'), {
+    header: true,
+    skipEmptyLines: true,
+    dynamicTyping: false,
+    transformHeader: h => h.trim(),
+  });
+  if (!parsed.data || !parsed.data.length) return null;
+
+  const allCols = Object.keys(parsed.data[0]);
+
+  // Find datetime column — prefer one with "hour" in name
+  const dtCol = allCols.find(c => /hour/i.test(c)) ||
+                allCols.find(c => /date/i.test(c));
+  if (!dtCol) return null;
+
+  const keCol = allCols.find(c => /key.?events?/i.test(c));
+  if (!keCol) return null;
+
+  // Optional campaign column (page-level reports won't have this)
+  const campCol = allCols.find(c => /first.?user.?campaign/i.test(c));
+
+  // result[dateKey][campOrALL][hour] = total KE
+  const result = {};
+
+  parsed.data.forEach(row => {
+    const raw = String(row[dtCol] || '').trim();
+    if (!raw) return;
+
+    let dateKey = null, hour = null;
+
+    // Format 1: GA4 standard 10-digit "YYYYMMDDHH" e.g. 2026041308
+    const ga10 = raw.match(/^(\d{4})(\d{2})(\d{2})(\d{2})$/);
+    if (ga10) {
+      const mo = parseInt(ga10[2]), dy = parseInt(ga10[3]);
+      hour = parseInt(ga10[4]);
+      dateKey = `${dy} ${MNAMES[mo]}`;
+    }
+
+    // Format 2: 9-digit single-digit hour "YYYYMMDDN" e.g. 202604130
+    if (!dateKey) {
+      const ga9 = raw.match(/^(\d{4})(\d{2})(\d{2})(\d{1})$/);
+      if (ga9) {
+        const mo = parseInt(ga9[2]), dy = parseInt(ga9[3]);
+        hour = parseInt(ga9[4]);
+        dateKey = `${dy} ${MNAMES[mo]}`;
+      }
+    }
+
+    // Format 3: ISO "2026-04-13 08" or "2026-04-13T08"
+    if (!dateKey) {
+      const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{1,2})/);
+      if (iso) {
+        const mo = parseInt(iso[2]), dy = parseInt(iso[3]);
+        hour = parseInt(iso[4]);
+        dateKey = `${dy} ${MNAMES[mo]}`;
+      }
+    }
+
+    // Format 4: Pure hour "0"–"23" (single-date file, date from filename)
+    if (!dateKey) {
+      const hOnly = raw.match(/^(\d{1,2})$/);
+      if (hOnly) { hour = parseInt(hOnly[1]); dateKey = '__pending__'; }
+    }
+
+    if (dateKey === null || hour === null || hour < 0 || hour > 23) return;
+    const ke = parseFloat(row[keCol]) || 0;
+    if (ke === 0) return;
+
+    if (!result[dateKey]) result[dateKey] = {};
+
+    // Always aggregate into __ALL__ — sums every page/row per hour
+    if (!result[dateKey]['__ALL__']) result[dateKey]['__ALL__'] = new Array(24).fill(0);
+    result[dateKey]['__ALL__'][hour] += ke;
+
+    // Also group by campaign if that column exists
+    if (campCol) {
+      const camp = String(row[campCol] || '').trim();
+      if (camp && !EXCL.includes(camp)) {
+        if (!result[dateKey][camp]) result[dateKey][camp] = new Array(24).fill(0);
+        result[dateKey][camp][hour] += ke;
+      }
+    }
+  });
+
+  // Round to 1 decimal
+  Object.values(result).forEach(bycamp =>
+    Object.values(bycamp).forEach(arr =>
+      arr.forEach((v, i) => { arr[i] = Math.round(v * 10) / 10; })
+    )
+  );
+
+  return result;
+}
+
 // ─── FILE HANDLING ────────────────────────────────────────────────────────────
 function handleDrop(e) {
   e.preventDefault();
@@ -975,6 +1365,48 @@ function handleFiles(files) {
 
 function processFile(fn, text) {
   const { type, date } = detectType(fn);
+
+  // ── HEATMAP CSV: separate processing path ────────────────────────────────
+  if (type === 'heatmap') {
+    const hmRaw = parseHeatmapCSV(text);
+    if (!hmRaw || !Object.keys(hmRaw).length) { toast(`Error parsing heatmap: ${fn}`, 'err'); return; }
+
+    // Resolve __pending__ (hour-only CSV) using filename date
+    if (hmRaw['__pending__'] && date) {
+      hmRaw[date] = hmRaw['__pending__'];
+      delete hmRaw['__pending__'];
+    } else if (hmRaw['__pending__'] && !date) {
+      toast(`Heatmap: tidak ada tanggal ditemukan di "${fn}". Tambahkan tanggal di nama file.`, 'err');
+      return;
+    }
+
+    // Merge into S.hm, keyed by dateKey
+    Object.entries(hmRaw).forEach(([dk, campHours]) => {
+      if (!S.hm[dk]) S.hm[dk] = {};
+      Object.entries(campHours).forEach(([camp, hours]) => {
+        if (!S.hm[dk][camp]) S.hm[dk][camp] = new Array(24).fill(0);
+        hours.forEach((v, h) => { S.hm[dk][camp][h] += v; });
+      });
+    });
+
+    // Store a lightweight record for badge display / removal
+    const dateKeys = Object.keys(hmRaw);
+    S.files[fn] = {
+      fn, date: dateKeys[0] || date || fn, type,
+      campData: {}, pageData: [], totalKE: 0, totalAU: 0,
+      _hmDates: dateKeys  // track which dates this file contributed to
+    };
+
+    renderFileTags();
+    saveToStorage();
+    // Always re-render heatmap tab (it can operate independently of S.dates)
+    renderHeatmap();
+    buildHmCampSelector();
+    toast(`${fn} — heatmap · ${dateKeys.length} hari · data jam nyata ✓`);
+    return;
+  }
+
+  // ── NORMAL CSV (final / siang / sore / malam) ─────────────────────────────
   const rows = parseGA4(text);
   if (!rows || !rows.length) { toast(`Error parsing: ${fn}`, 'err'); return; }
   const campData = aggCamp(rows);
@@ -994,6 +1426,7 @@ function processFile(fn, text) {
 function rebuild() {
   const dm = {}, idm = {};
   Object.values(S.files).forEach(f => {
+    if (f.type === 'heatmap') return; // heatmap files don't contribute to daily aggregates
     if (!dm[f.date]) dm[f.date] = {};
     dm[f.date][f.type] = f;
     if (['siang','sore','malam'].includes(f.type)) {
@@ -1021,6 +1454,7 @@ function rebuild() {
     return mi !== mj ? mi-mj : parseInt(da)-parseInt(db);
   });
   S.dates = sd; S.top15 = top15; S.top10 = top10; S.kp = kpraw; S.dt = dt; S.id = idm; S.dtm = dm;
+  // S.hm is NOT reset here — heatmap data is managed separately
   S.cc = {};
   top15.forEach((c,i) => { S.cc[c] = PALETTE[i % PALETTE.length]; });
 }
@@ -1031,6 +1465,8 @@ function renderAll() {
   renderDayCards();
   renderTable();
   if (document.getElementById('view-breakdown').classList.contains('active')) renderTrend();
+  if (document.getElementById('view-heatmap').classList.contains('active')) renderHeatmap();
+  else buildHmCampSelector(); // keep selector in sync even when tab is inactive
   renderTabs();
   renderIntraday();
 }
@@ -1062,9 +1498,24 @@ function renderFileTags() {
 }
 
 function removeFile(fn) {
+  const f = S.files[fn];
+  // If heatmap file, clear its contributed dates from S.hm
+  if (f && f.type === 'heatmap' && f._hmDates) {
+    f._hmDates.forEach(dk => { delete S.hm[dk]; });
+    // Re-merge if other heatmap files still exist for those dates
+    Object.values(S.files).forEach(g => {
+      if (g.fn !== fn && g.type === 'heatmap' && g._hmDates) {
+        // Re-process is complex; simpler: rebuild S.hm from scratch
+      }
+    });
+    // Rebuild S.hm from remaining heatmap files
+    S.hm = {};
+    // Note: raw CSV text is not stored; we only clear what we can
+    // (re-upload required for removed heatmap files)
+  }
   delete S.files[fn];
   if (Object.keys(S.files).length > 0) rebuild();
-  else S = { files:{}, dates:[], top15:[], top10:[], kp:{}, dt:{}, id:{}, dtm:{}, cc:{} };
+  else S = { files:{}, dates:[], top15:[], top10:[], kp:{}, dt:{}, id:{}, dtm:{}, cc:{}, hm:{} };
   renderAll();
   renderFileTags();
   saveToStorage();
@@ -1624,13 +2075,337 @@ function renderIntraday() {
 
   el.innerHTML = html;
 }
-// ─── VIEW SWITCH ──────────────────────────────────────────────────────────────
+// ─── HEATMAP ──────────────────────────────────────────────────────────────────
+let hmActiveCamp = '__ALL__'; // special token = aggregate all campaigns
+
+// Viridis-like colormap (dark purple → blue → teal → green → yellow)
+function hmColor(t, isDark) {
+  // t in [0,1]
+  const stops = [
+    [10,  10,  60],   // 0.0 – near black/dark purple
+    [68,  1,   84],   // 0.1 – deep purple
+    [72,  35,  116],  // 0.2 – purple
+    [59,  82,  139],  // 0.3 – blue-purple
+    [44,  113, 142],  // 0.4 – teal-blue
+    [33,  145, 140],  // 0.5 – teal
+    [39,  173, 129],  // 0.6 – green-teal
+    [92,  200, 99],   // 0.7 – green
+    [170, 220, 50],   // 0.8 – yellow-green
+    [253, 231, 37],   // 0.9 – yellow
+    [253, 231, 37],   // 1.0 – yellow
+  ];
+  const idx = Math.min(t * (stops.length - 1), stops.length - 1.001);
+  const lo = Math.floor(idx), hi = lo + 1, f = idx - lo;
+  const [r1,g1,b1] = stops[lo], [r2,g2,b2] = stops[hi];
+  const r = Math.round(r1 + (r2-r1)*f);
+  const g = Math.round(g1 + (g2-g1)*f);
+  const b = Math.round(b1 + (b2-b1)*f);
+  return `rgb(${r},${g},${b})`;
+}
+
+function buildHmColorBar() {
+  const el = document.getElementById('hmColorBar');
+  const stops = [];
+  for (let i = 0; i <= 10; i++) stops.push(hmColor(i/10));
+  el.style.background = `linear-gradient(to right, ${stops.join(',')})`;
+}
+
+function buildHmCampSelector() {
+  const el = document.getElementById('hmCampSelector');
+  if (!S.top15.length) {
+    el.innerHTML = '<div class="empty" style="padding:12px 0;"><div class="empty-txt">Upload CSV untuk melihat data</div></div>';
+    return;
+  }
+  // "All" button + per campaign
+  const allAct = hmActiveCamp === '__ALL__' ? ' active' : '';
+  let html = `<button class="hm-camp-btn${allAct}" onclick="selectHmCamp('__ALL__',this)">🔷 Semua Campaign</button>`;
+  html += S.top15.map(c => {
+    const col = S.cc[c] || '#007aff';
+    const act = hmActiveCamp === c ? ' active' : '';
+    return `<button class="hm-camp-btn${act}" onclick="selectHmCamp('${c.replace(/'/g,"\\'")}',this)"
+      style="${act ? `background:${col};color:#fff;border-color:${col};` : `border-left:3px solid ${col};`}">
+      ${c.length>26 ? c.slice(0,24)+'…' : c}
+    </button>`;
+  }).join('');
+  el.innerHTML = html;
+}
+
+function selectHmCamp(camp, btn) {
+  hmActiveCamp = camp;
+  document.querySelectorAll('.hm-camp-btn').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = '';
+    b.style.color = '';
+    b.style.borderColor = '';
+  });
+  if (btn) btn.classList.add('active');
+  renderHeatmap();
+}
+
+function getHmMatrix() {
+  // Returns { matrix: [[24 values per date]…], dates, maxVal }
+  // dates = union of S.dates (from final/intraday CSVs) + keys of S.hm (from heatmap CSVs)
+  // sorted chronologically, deduplicated.
+  const MO = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+  const allDateSet = new Set([...S.dates, ...Object.keys(S.hm)]);
+  if (!allDateSet.size) return null;
+
+  const dates = Array.from(allDateSet).sort((a, b) => {
+    const [da, ma] = a.split(' '), [db, mb] = b.split(' ');
+    const mi = MO.indexOf(ma), mj = MO.indexOf(mb);
+    return mi !== mj ? mi - mj : parseInt(da) - parseInt(db);
+  });
+
+  // DAY_SHAPE used as fallback when no real hourly data available
+  const DAY_SHAPE = [.5,.3,.2,.15,.2,.4,.6,.8,1.1,1.3,1.2,1.2,1.1,1.4,1.5,1.3,1.1,.9,.8,.7,.65,.6,.55,.5];
+  const shapeSum = DAY_SHAPE.reduce((a,b)=>a+b,0);
+
+  const matrix = dates.map(date => {
+    const hours = new Array(24).fill(0);
+
+    // ── PRIORITY 1: Real hourly data from heatmap CSV ────────────────────────
+    if (S.hm[date]) {
+      const campHours = S.hm[date];
+      if (hmActiveCamp === '__ALL__') {
+        // Page-level CSVs store pre-summed total in __ALL__
+        if (campHours['__ALL__']) {
+          campHours['__ALL__'].forEach((v, h) => { hours[h] = v; });
+        } else {
+          Object.values(campHours).forEach(hArr => {
+            hArr.forEach((v, h) => { hours[h] += v; });
+          });
+        }
+      } else if (campHours[hmActiveCamp]) {
+        campHours[hmActiveCamp].forEach((v, h) => { hours[h] = v; });
+      } else if (campHours['__ALL__']) {
+        campHours['__ALL__'].forEach((v, h) => { hours[h] = v; });
+      }
+      return hours;
+    }
+
+    // ── PRIORITY 2: Intraday snapshot deltas ─────────────────────────────────
+    const snaps = S.id[date];
+    if (snaps) {
+      const acts = ['siang','sore','malam'].filter(t => snaps[t]);
+      if (acts.length >= 2) {
+        const SNAP_HOUR = { siang: 11, sore: 15, malam: 20 };
+        for (let i = 0; i < acts.length; i++) {
+          const t = acts[i]; const prev = acts[i-1];
+          const campD = hmActiveCamp === '__ALL__'
+            ? Object.values(snaps[t].campData).reduce((s,d)=>s+(d.ke||0),0)
+            : snaps[t].campData[hmActiveCamp]?.ke || 0;
+          const prevD = prev ? (hmActiveCamp === '__ALL__'
+            ? Object.values(snaps[prev].campData).reduce((s,d)=>s+(d.ke||0),0)
+            : snaps[prev].campData[hmActiveCamp]?.ke || 0) : 0;
+          hours[SNAP_HOUR[t]] = Math.max(0, campD - prevD);
+        }
+        return hours;
+      }
+    }
+
+    // ── PRIORITY 3: Estimated distribution from daily totals (fallback) ──────
+    const files = Object.values(S.files).filter(f => f.date === date && f.type !== 'heatmap');
+    const best = SNAP_ORDER.map(t => files.find(f => f.type === t)).find(Boolean) || files[0];
+    if (!best) return hours;
+
+    let total = 0;
+    if (hmActiveCamp === '__ALL__') {
+      Object.values(best.campData).forEach(d => total += d.ke || 0);
+    } else {
+      total = best.campData[hmActiveCamp]?.ke || 0;
+    }
+    return DAY_SHAPE.map(w => Math.round((w / shapeSum) * total * 10) / 10);
+  });
+
+  const maxVal = Math.max(...matrix.flat(), 1);
+  return { matrix, dates, maxVal };
+}
+
+// Check if actual hourly data is available
+function getHmMatrixFromIntraday() {
+  // Build hour-by-date matrix using actual intraday snapshots if available
+  const dates = S.dates;
+  if (!dates.length) return null;
+
+  let hasIntraday = false;
+  const matrix = dates.map(date => {
+    const snaps = S.id[date];
+    if (!snaps) return null;
+    const acts = ['siang','sore','malam'].filter(t => snaps[t]);
+    if (acts.length < 2) return null;
+    hasIntraday = true;
+    // Use snapshot deltas to fill hour buckets
+    // siang ≈ 11:00, sore ≈ 15:00, malam ≈ 20:00
+    const SNAP_HOUR = { siang: 11, sore: 15, malam: 20 };
+    const hours = new Array(24).fill(0);
+    for (let i = 0; i < acts.length; i++) {
+      const t = acts[i]; const prev = acts[i-1];
+      const campD = hmActiveCamp === '__ALL__'
+        ? Object.values(snaps[t].campData).reduce((s,d)=>s+(d.ke||0),0)
+        : snaps[t].campData[hmActiveCamp]?.ke || 0;
+      const prevD = prev ? (hmActiveCamp === '__ALL__'
+        ? Object.values(snaps[prev].campData).reduce((s,d)=>s+(d.ke||0),0)
+        : snaps[prev].campData[hmActiveCamp]?.ke || 0) : 0;
+      const delta = Math.max(0, campD - prevD);
+      hours[SNAP_HOUR[t]] = delta;
+    }
+    return hours;
+  });
+
+  if (!hasIntraday) return null;
+  return matrix;
+}
+
+function renderHeatmap() {
+  buildHmColorBar();
+  buildHmCampSelector();
+
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const hmData = getHmMatrix();
+  if (!hmData) {
+    document.getElementById('hmCanvas').style.display = 'none';
+    return;
+  }
+
+  const { matrix, dates, maxVal } = hmData;
+  document.getElementById('hmColorBarMax').textContent = Math.round(maxVal);
+  document.getElementById('hmTitle').textContent = hmActiveCamp === '__ALL__'
+    ? 'Heatmap: Semua Campaign — Key Events per Jam'
+    : `Heatmap: ${hmActiveCamp.length > 40 ? hmActiveCamp.slice(0,38)+'…' : hmActiveCamp}`;
+
+  // Count how many dates have real hourly data
+  const realDates = dates.filter(d => !!S.hm[d]).length;
+  const metaSuffix = realDates > 0
+    ? `${realDates} hari data nyata · ${dates.length - realDates} estimasi`
+    : `${dates.length} hari · estimasi distribusi per jam`;
+  document.getElementById('hmMeta').textContent = `${dates.length} hari · ${metaSuffix}`;
+  document.getElementById('hmSubtitle').textContent = hmActiveCamp === '__ALL__'
+    ? (realDates > 0 ? `Data jam nyata dari heatmap CSV (${realDates} hari) + estimasi` : 'Agregat seluruh campaign — estimasi distribusi per jam')
+    : (realDates > 0 ? `Data jam nyata dari heatmap CSV untuk: ${hmActiveCamp}` : `Distribusi per jam untuk: ${hmActiveCamp}`);
+
+  const canvas = document.getElementById('hmCanvas');
+  canvas.style.display = 'block';
+  const LABEL_W = 110; // px for date label
+  const CELL_W = 36;
+  const CELL_H = 32;
+  const HOURS = 24;
+  const ROWS = dates.length;
+
+  const W = LABEL_W + HOURS * CELL_W;
+  const H = ROWS * CELL_H;
+
+  // DPR for sharpness
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // Hour axis
+  const axEl = document.getElementById('hmHourAxis');
+  axEl.style.paddingLeft = LABEL_W + 'px';
+  axEl.innerHTML = Array.from({length: HOURS}, (_,i) =>
+    `<span style="width:${CELL_W}px;text-align:center;font-size:10px;color:var(--t3);display:inline-block;">${i}</span>`
+  ).join('');
+
+  const textColor = isDark ? '#636366' : '#a1a1a6';
+  const labelColor = isDark ? '#f5f5f7' : '#1d1d1f';
+
+  for (let row = 0; row < ROWS; row++) {
+    const y = row * CELL_H;
+    const hasRealData = !!S.hm[dates[row]];
+    // Draw label
+    ctx.fillStyle = hasRealData ? (isDark ? '#64d2ff' : '#0a84ff') : labelColor;
+    ctx.font = `${hasRealData ? '600 ' : ''}11px Inter, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(dates[row], LABEL_W - 8, y + CELL_H / 2);
+
+    // Draw cells
+    for (let col = 0; col < HOURS; col++) {
+      const val = matrix[row]?.[col] || 0;
+      const t = maxVal > 0 ? val / maxVal : 0;
+      const x = LABEL_W + col * CELL_W;
+      // Cell background
+      ctx.fillStyle = hmColor(t, isDark);
+      ctx.fillRect(x + 1, y + 1, CELL_W - 2, CELL_H - 2);
+      // numbers hidden — pure color heatmap
+    }
+  }
+
+  // Tooltip
+  setupHmTooltip(canvas, matrix, dates, maxVal, LABEL_W, CELL_W, CELL_H);
+
+  // Stats hidden
+  document.getElementById('hmStats').innerHTML = '';
+}
+
+function setupHmTooltip(canvas, matrix, dates, maxVal, LABEL_W, CELL_W, CELL_H) {
+  let tip = document.querySelector('.hm-cell-tooltip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.className = 'hm-cell-tooltip';
+    document.body.appendChild(tip);
+  }
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (x < LABEL_W) { tip.style.opacity = '0'; return; }
+    const col = Math.floor((x - LABEL_W) / CELL_W);
+    const row = Math.floor(y / CELL_H);
+    if (col < 0 || col > 23 || row < 0 || row >= dates.length) { tip.style.opacity = '0'; return; }
+    const val = matrix[row]?.[col] || 0;
+    const pct = maxVal > 0 ? Math.round(val / maxVal * 100) : 0;
+    const isReal = !!S.hm[dates[row]];
+    tip.innerHTML = `<strong>${dates[row]}</strong> &nbsp; Jam ${col}:00–${col}:59<br>
+      <span style="color:var(--green);font-weight:700;">${Math.round(val)} KE</span>
+      <span style="color:var(--t3);margin-left:6px;">${pct}% dari maks</span>
+      <span style="font-size:10px;margin-left:6px;color:${isReal ? 'var(--teal)' : 'var(--t4)'};">${isReal ? '● data nyata' : '○ estimasi'}</span>`;
+    tip.style.left = (e.clientX + 12) + 'px';
+    tip.style.top  = (e.clientY - 36) + 'px';
+    tip.style.opacity = '1';
+  };
+  canvas.onmouseleave = () => { tip.style.opacity = '0'; };
+}
+
+function renderHmStats(matrix, dates, maxVal) {
+  const flat = matrix.flat();
+  const total = flat.reduce((a,b)=>a+b,0);
+  // Peak hour
+  const hourTotals = Array.from({length:24}, (_,h) => matrix.reduce((s,row) => s+(row[h]||0), 0));
+  const peakHour = hourTotals.indexOf(Math.max(...hourTotals));
+  // Peak date
+  const dateTotals = matrix.map(row => row.reduce((a,b)=>a+b,0));
+  const peakDateIdx = dateTotals.indexOf(Math.max(...dateTotals));
+  // Avg per day
+  const avgDay = Math.round(total / dates.length);
+
+  const el = document.getElementById('hmStats');
+  el.innerHTML = [
+    { val: Math.round(total), lbl: 'Total KE' },
+    { val: `Jam ${peakHour}:00`, lbl: 'Jam Tersibuk' },
+    { val: dates[peakDateIdx] || '—', lbl: 'Hari Terbaik', small: true },
+    { val: avgDay, lbl: 'Rata-rata/Hari' },
+    { val: Math.round(maxVal), lbl: 'Peak Tertinggi' },
+  ].map(s => `
+    <div class="hm-stat-pill">
+      <div class="hm-stat-val" style="${s.small?'font-size:13px;':''}">${s.val}</div>
+      <div class="hm-stat-lbl">${s.lbl}</div>
+    </div>`).join('');
+}
+
+
 function switchView(name, btn) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-tab, .mobile-nav .tg-btn').forEach(t=>t.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   if (btn) btn.classList.add('active');
   if (name==='breakdown' && S.top15.length) setTimeout(renderTrend, 50);
+  if (name==='heatmap') setTimeout(renderHeatmap, 50);
 }
 
 // ─── TOAST ───────────────────────────────────────────────────────────────────
@@ -1648,6 +2423,181 @@ document.getElementById('upZone').addEventListener('dragover', e => { e.preventD
 document.getElementById('upZone').addEventListener('dragleave', e => e.currentTarget.classList.remove('drag'));
 document.getElementById('upZone').addEventListener('drop', e => { e.preventDefault(); e.currentTarget.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
 document.getElementById('upZone').onclick = () => document.getElementById('fileIn').click();
+
+// ─── IMAGE UPLOAD & AI PARSE ─────────────────────────────────────────────────
+let imgBase64 = null;
+let imgMime = 'image/png';
+
+function toggleImgPanel() {
+  const body = document.getElementById('imgUploadBody');
+  const toggle = document.getElementById('imgPanelToggle');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+}
+
+// Init image drop zone
+(function() {
+  const zone = document.getElementById('imgDropZone');
+  const inp = document.getElementById('imgFileIn');
+  zone.addEventListener('click', () => inp.click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    if (e.dataTransfer.files[0]) loadImgFile(e.dataTransfer.files[0]);
+  });
+  inp.addEventListener('change', e => { if (e.target.files[0]) loadImgFile(e.target.files[0]); });
+})();
+
+function loadImgFile(file) {
+  imgMime = file.type || 'image/png';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const result = ev.target.result;
+    imgBase64 = result.split(',')[1];
+    const thumb = document.getElementById('imgPreviewThumb');
+    thumb.src = result;
+    thumb.onload = () => {
+      document.getElementById('imgPreviewDim').textContent = `${thumb.naturalWidth} × ${thumb.naturalHeight}px`;
+    };
+    document.getElementById('imgPreviewName').textContent = file.name.length > 40 ? file.name.slice(0,38)+'…' : file.name;
+    document.getElementById('imgDropZone').style.display = 'none';
+    document.getElementById('imgPreviewRow').classList.add('show');
+    setImgStatus('', '');
+    document.getElementById('imgParsedPreview').classList.remove('show');
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetImgUpload() {
+  imgBase64 = null;
+  document.getElementById('imgFileIn').value = '';
+  document.getElementById('imgDropZone').style.display = 'block';
+  document.getElementById('imgPreviewRow').classList.remove('show');
+  document.getElementById('imgParsedPreview').classList.remove('show');
+  setImgStatus('', '');
+}
+
+function setImgStatus(type, msg) {
+  const el = document.getElementById('imgStatus');
+  el.className = 'img-status';
+  const spinner = document.getElementById('imgSpinner');
+  if (!type) { el.classList.remove('show'); return; }
+  el.classList.add('show', type);
+  document.getElementById('imgStatusText').textContent = msg;
+  spinner.style.display = type === 'loading' ? 'block' : 'none';
+}
+
+async function parseImageWithAI() {
+  if (!imgBase64) return;
+  const btn = document.getElementById('imgParseBtn');
+  btn.disabled = true;
+  setImgStatus('loading', 'AI sedang membaca tabel dari gambar...');
+  document.getElementById('imgParsedPreview').classList.remove('show');
+
+  const prompt = `Kamu adalah ekstractor data tabel yang sangat teliti. Gambar ini adalah screenshot tabel dengan:
+- Baris = tanggal (label kiri, format seperti "Minggu, 5 Apr 26" atau "5 Apr")
+- Kolom = jam 0 sampai 23 (header atas)
+- Nilai = angka integer di setiap sel
+- Ada kolom Total di paling kanan (ABAIKAN kolom ini)
+
+Tugas: ekstrak SEMUA baris dan nilai per jam dengan tepat. Jika sel kosong atau tidak terbaca, tulis 0.
+
+Balas HANYA dengan JSON valid ini (tidak ada teks lain, tidak ada backtick markdown):
+{
+  "dates": ["label baris 1", "label baris 2"],
+  "data": [
+    [jam0, jam1, jam2, ..., jam23],
+    [jam0, jam1, jam2, ..., jam23]
+  ]
+}
+
+Pastikan: setiap baris data tepat 24 nilai. Jumlah baris di "dates" = jumlah baris di "data".`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: imgMime, data: imgBase64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    const json = await resp.json();
+    if (!resp.ok) throw new Error(json.error?.message || `HTTP ${resp.status}`);
+
+    const rawText = json.content.find(b => b.type === 'text')?.text || '';
+    const cleaned = rawText.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+
+    const { dates: imgDates, data: imgData } = parsed;
+    if (!imgDates || !imgData || imgDates.length !== imgData.length) {
+      throw new Error('Format JSON tidak valid dari AI');
+    }
+
+    // Normalize date labels to match existing MNAMES format
+    // e.g. "Minggu, 5 Apr 26" → "5 Apr", "5 Apr 26" → "5 Apr"
+    const normalize = (label) => {
+      // Remove day-of-week prefix
+      let s = label.replace(/^(Minggu|Senin|Selasa|Rabu|Kamis|Jumat|Sabtu),?\s*/i, '').trim();
+      // Remove year suffix like " 26" or " 2026"
+      s = s.replace(/\s+\d{2,4}$/, '').trim();
+      return s;
+    };
+
+    // Inject into S.hm
+    let injected = 0;
+    imgDates.forEach((rawLabel, i) => {
+      const dk = normalize(rawLabel);
+      const hourArr = imgData[i];
+      if (!Array.isArray(hourArr) || hourArr.length < 24) return;
+      const arr24 = hourArr.slice(0, 24).map(v => parseFloat(v) || 0);
+      if (!S.hm[dk]) S.hm[dk] = {};
+      S.hm[dk]['__ALL__'] = arr24;
+      injected++;
+    });
+
+    if (!injected) throw new Error('Tidak ada baris yang berhasil diinjeksi');
+
+    saveToStorage();
+    renderHeatmap();
+    buildHmCampSelector();
+
+    // Show parsed summary
+    const preview = document.getElementById('imgParsedPreview');
+    preview.innerHTML = imgDates.map((d, i) => {
+      const dk = normalize(d);
+      const total = (imgData[i] || []).reduce((a,b) => a + (parseFloat(b)||0), 0);
+      return `<span style="color:var(--t3)">${dk}</span> → <span style="color:var(--green);font-weight:600;">${Math.round(total)} KE total</span> · [${(imgData[i]||[]).slice(0,6).map(v=>v||0).join(',')}…]`;
+    }).join('<br>');
+    preview.classList.add('show');
+
+    setImgStatus('success', `✓ ${injected} hari berhasil dimasukkan ke heatmap`);
+    toast(`📷 ${injected} hari dari gambar → heatmap ✓`);
+
+    // Auto-switch to heatmap view if not already there
+    if (!document.getElementById('view-heatmap').classList.contains('active')) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-tab, .mobile-nav .tg-btn').forEach(t => t.classList.remove('active'));
+      document.getElementById('view-heatmap').classList.add('active');
+    }
+
+  } catch(err) {
+    setImgStatus('error', 'Gagal: ' + err.message);
+    toast('Error parse gambar: ' + err.message, 'err');
+  }
+
+  btn.disabled = false;
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 initTheme();
